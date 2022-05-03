@@ -1,0 +1,43 @@
+version: '2.2'
+
+services:
+  rabbit:
+    restart: always
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 15s
+      timeout: 10s
+      retries: 5  
+
+  publisherservice:
+    restart: on-failure
+    image: ${DOCKER_REGISTRY-}publisherservice
+    build:
+      context: .
+      dockerfile: PublisherService/Dockerfile
+    ports:
+      - "5000:80"
+      - "44388:443"
+    environment:
+      - RABBITMQ_DEFAULT_HOST=rabbit
+      - RABBITMQ_DEFAULT_PORT=5672
+    depends_on:
+      rabbit:
+        condition: service_healthy
+  
+  messageprocessorconsoleservice:
+    restart: on-failure
+    image: ${DOCKER_REGISTRY-}messageprocessorconsoleservice
+    build:
+      context: .
+      dockerfile: MessageProcessorConsoleService/Dockerfile
+    environment:
+      - RABBITMQ_DEFAULT_HOST=rabbit
+      - RABBITMQ_DEFAULT_PORT=5672
+    depends_on:
+      rabbit:
+        condition: service_healthy  
