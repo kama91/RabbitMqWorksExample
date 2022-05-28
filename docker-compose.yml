@@ -18,7 +18,7 @@ services:
     image: ${DOCKER_REGISTRY-}publisherservice
     build:
       context: .
-      dockerfile: PublisherService/Dockerfile
+      dockerfile: src/PublisherService/Dockerfile
     ports:
       - "5000:80"
       - "44388:443"
@@ -34,7 +34,7 @@ services:
     image: ${DOCKER_REGISTRY-}messageprocessorconsoleservice
     build:
       context: .
-      dockerfile: MessageProcessorConsoleService/Dockerfile
+      dockerfile: src/MessageProcessorConsoleService/Dockerfile
     environment:
       - RABBITMQ_DEFAULT_HOST=rabbit
       - RABBITMQ_DEFAULT_PORT=5672
