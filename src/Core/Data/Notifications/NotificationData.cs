@@ -2,7 +2,7 @@
 
 namespace Core.Data.Notifications
 {
-    public sealed class NotificationData
+    public class NotificationData
     {
         [JsonPropertyName("id")]
         public string Id { get; set; }
