@@ -31,7 +31,7 @@ namespace ProcessMessageConsoleService.HostedService
             {
                 throw new ArgumentNullException(nameof(rabbitMqSettings));
             }
-            _msgConsumerConfiguration = new MessageConsumerConfiguration(rabbitMqSettings.ExchangeName, rabbitMqSettings.QueueName, "nylas");
+            _msgConsumerConfiguration = new MessageConsumerConfiguration(rabbitMqSettings.ExchangeName, rabbitMqSettings.QueueName, "routeKey");
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 

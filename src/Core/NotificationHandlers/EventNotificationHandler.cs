@@ -34,7 +34,7 @@ namespace Core.NotificationHandlers
                     Id = Guid.NewGuid(),
                     Data = notification.Notification
                 };
-                _eventBus.Publish(busMessage, _rabbitMqSettings.ExchangeName, "nylas");
+                _eventBus.Publish(busMessage, _rabbitMqSettings.ExchangeName, "routeKey");
     
                 return Task.FromResult(Unit.Value);
             }
