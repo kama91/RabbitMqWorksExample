@@ -1,4 +1,3 @@
-using Core;
 using Core.Serializer;
 using Core.Serializer.Abstractions;
 
@@ -14,9 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 
+using PublisherService;
 using PublisherService.MediatorService;
-
-using System.Reflection;
 
 namespace CalendarService.API
 {
@@ -37,7 +35,7 @@ namespace CalendarService.API
             services.AddTransient<IJsonByteArraySerializer, JsonByteArraySerializer>();
             var rabbitSettings = Configuration.GetSection("RabbitMQSettings").Get<RabbitMQSettings>();
             services.AddSingleton(rabbitSettings);
-            services.AddRabbitMq();
+            services.AddRabbitMQ();
 
             services.AddSwaggerGen(c =>
             {
