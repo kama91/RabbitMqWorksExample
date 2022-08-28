@@ -10,7 +10,7 @@ COPY ["Core/Core.csproj", "Core/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 RUN dotnet restore "MessageProcessorConsoleService/MessageProcessorConsoleService.csproj"
 COPY . .
-WORKDIR "/src/MessageProcessorConsoleService"
+WORKDIR "/src/src/MessageProcessorConsoleService"
 RUN dotnet build "MessageProcessorConsoleService.csproj" -c Release -o /app/build
 
 FROM build AS publish

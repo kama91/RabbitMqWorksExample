@@ -12,7 +12,7 @@ COPY ["Core/Core.csproj", "Core/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 RUN dotnet restore "PublisherService/PublisherService.csproj"
 COPY . .
-WORKDIR "/src/PublisherService"
+WORKDIR "/src/src/PublisherService"
 RUN dotnet build "PublisherService.csproj" -c Release -o /app/build
 
 FROM build AS publish
