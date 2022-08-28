@@ -1,0 +1,8 @@
+/src/Core/obj
+/src/Core/bin
+/src/Infrastructure/obj
+/src/Infrastructure/bin
+/src/MessageProcessorConsoleService/obj
+/src/MessageProcessorConsoleService/bin
+/src/PublisherService/obj
+/src/PublisherService/bin
