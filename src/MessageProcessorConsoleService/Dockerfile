@@ -5,9 +5,9 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["MessageProcessorConsoleService/MessageProcessorConsoleService.csproj", "MessageProcessorConsoleService/"]
-COPY ["Core/Core.csproj", "Core/"]
-COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
+COPY ["src/MessageProcessorConsoleService/MessageProcessorConsoleService.csproj", "MessageProcessorConsoleService/"]
+COPY ["src/Core/Core.csproj", "Core/"]
+COPY ["src/Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 RUN dotnet restore "MessageProcessorConsoleService/MessageProcessorConsoleService.csproj"
 COPY . .
 WORKDIR "/src/src/MessageProcessorConsoleService"

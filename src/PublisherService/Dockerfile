@@ -7,9 +7,9 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["PublisherService/PublisherService.csproj", "PublisherService/"]
-COPY ["Core/Core.csproj", "Core/"]
-COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
+COPY ["src/PublisherService/PublisherService.csproj", "PublisherService/"]
+COPY ["src/Core/Core.csproj", "Core/"]
+COPY ["src/Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 RUN dotnet restore "PublisherService/PublisherService.csproj"
 COPY . .
 WORKDIR "/src/src/PublisherService"
