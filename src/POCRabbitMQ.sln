@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageProcessorConsoleServ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PublisherService", "PublisherService\PublisherService.csproj", "{1B543C0D-9F4E-4011-8694-67DF08D6DB3D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{CFFF17FE-8795-410D-AF61-DCC682EFA1F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{1B543C0D-9F4E-4011-8694-67DF08D6DB3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B543C0D-9F4E-4011-8694-67DF08D6DB3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B543C0D-9F4E-4011-8694-67DF08D6DB3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFFF17FE-8795-410D-AF61-DCC682EFA1F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFFF17FE-8795-410D-AF61-DCC682EFA1F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFFF17FE-8795-410D-AF61-DCC682EFA1F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFFF17FE-8795-410D-AF61-DCC682EFA1F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

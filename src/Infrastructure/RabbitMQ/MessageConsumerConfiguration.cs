@@ -1,6 +1,7 @@
-﻿using System;
+﻿
+using System;
 
-namespace Core.RabbitMQ
+namespace Infrastructure.RabbitMQ
 {
     public class MessageConsumerConfiguration
     {

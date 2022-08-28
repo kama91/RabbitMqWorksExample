@@ -1,11 +1,11 @@
 ﻿using Core.Data.Notifications;
-using Core.RabbitMQ;
-using Core.RabbitMQ.Abstractions;
-using Core.RabbitMQ.QueueEvents;
+
+using Infrastructure.RabbitMQ;
+using Infrastructure.RabbitMQ.Abstractions;
+using Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 using ProcessMessageConsoleService.QueueEventHandlers;
 
@@ -15,40 +15,41 @@ using System.Threading.Tasks;
 
 namespace ProcessMessageConsoleService.HostedService
 {
-    public class MessageReceiveHostedService : BackgroundService
+    public class MessageReceiveHostedService : IHostedService
     {
-        private readonly IEventBus _eventBus;
-        private readonly MessageConsumerConfiguration _msgConsumerConfiguration;
+        private readonly IRabbitMQBus _rabbitMqBus;
+        private readonly MessageConsumerConfiguration _consumerConfiguration;
+        private IRabbitMQBusSubscription _subscription;
         private readonly ILogger<MessageReceiveHostedService> _logger;
 
         public MessageReceiveHostedService(
-            IEventBus eventBus,
+            IRabbitMQBus rabbitMqBus,
             RabbitMQSettings rabbitMqSettings,
             ILogger<MessageReceiveHostedService> logger)
         {
-            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+            _rabbitMqBus = rabbitMqBus ?? throw new ArgumentNullException(nameof(rabbitMqBus));
             if (rabbitMqSettings == null)
             {
                 throw new ArgumentNullException(nameof(rabbitMqSettings));
             }
-            _msgConsumerConfiguration = new MessageConsumerConfiguration(rabbitMqSettings.ExchangeName, rabbitMqSettings.QueueName, "routeKey");
+            _consumerConfiguration = new MessageConsumerConfiguration(rabbitMqSettings.ExchangeName, rabbitMqSettings.QueueName, "routeKey");
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            try
-            {
-                _eventBus.Subscribe<BusMessageHandler, BusMessage, Notification>(_msgConsumerConfiguration);
+            _subscription = _rabbitMqBus.Subscribe<RabbitMQMessageHandler, RabbitMQBusMessage, Notification>(_consumerConfiguration);
+            return Task.CompletedTask;
+        }
 
-                return Task.CompletedTask;
-            }
-            catch (Exception ex)
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            if (_subscription != null)
             {
-                _logger.LogError("Subscription error", ex);
-                
-                return Task.FromException(ex);
+                _rabbitMqBus.Unsubscribe<Notification>(_subscription);
             }
+
+            return Task.CompletedTask;
         }
     }
 }

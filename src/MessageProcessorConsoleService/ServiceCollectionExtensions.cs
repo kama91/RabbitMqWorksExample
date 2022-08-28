@@ -1,6 +1,7 @@
-﻿using Core.RabbitMQ;
-using Core.RabbitMQ.Abstractions;
-using Core.RabbitMQ.EventBusRabbitMQ;
+﻿
+using Infrastructure.RabbitMQ;
+using Infrastructure.RabbitMQ.Abstractions;
+using Infrastructure.RabbitMQ.EventBusRabbitMQ;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ namespace Core
         {
             serviceCollection.AddSingleton<IRabbitMQPersistentConnection>(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<RabbitMQPersistentConnection>>();
+                var connection = sp.GetRequiredService<ILogger<RabbitMQPersistentConnection>>();
                 var rabbitSettings = sp.GetRequiredService<RabbitMQSettings>();
                 var factory = new ConnectionFactory
                 {
@@ -42,11 +43,11 @@ namespace Core
                     retryConnectCount = connectCount;
                 }
 
-                return new RabbitMQPersistentConnection(factory, logger, retryConnectCount);
+                return new RabbitMQPersistentConnection(factory, connection, retryConnectCount);
             
             });
 
-            serviceCollection.AddSingleton<IEventBus, EventBusRabbitMQ>();
+            serviceCollection.AddSingleton<IRabbitMQBus, RabbitMQBus>();
 
             return serviceCollection;
         } 

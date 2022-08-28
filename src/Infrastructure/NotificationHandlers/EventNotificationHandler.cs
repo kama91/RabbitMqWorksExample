@@ -1,22 +1,22 @@
-﻿using Core.RabbitMQ;
-using Core.RabbitMQ.Abstractions;
-using Core.RabbitMQ.QueueEvents;
-using MediatR;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿
+using Infrastructure.RabbitMQ;
+using Infrastructure.RabbitMQ.Abstractions;
+using Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions;
 
-namespace Core.NotificationHandlers
+using MediatR;
+
+using Microsoft.Extensions.Logging;
+
+namespace Infrastructure.NotificationHandlers
 {
-    public sealed class EventNotificationHandler : INotificationHandler<EventNotification>
+    public sealed class EventNotificationHandler : INotificationHandler<NotificationCommand>
     {
-        private readonly IEventBus _eventBus;
+        private readonly IRabbitMQBus _eventBus;
         private readonly RabbitMQSettings _rabbitMqSettings;
         private readonly ILogger<EventNotificationHandler> _logger;
 
         public EventNotificationHandler(
-            IEventBus eventBus,
+            IRabbitMQBus eventBus,
             RabbitMQSettings rabbitMqSettings,
             ILogger<EventNotificationHandler> logger)
         {
@@ -25,22 +25,23 @@ namespace Core.NotificationHandlers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public Task Handle(EventNotification notification, CancellationToken cancellationToken)
+        public Task Handle(NotificationCommand notification, CancellationToken cancellationToken)
         {
             try
             {
-                var busMessage = new BusMessage
+                var busMessage = new RabbitMQBusMessage
                 {
                     Id = Guid.NewGuid(),
                     Data = notification.Notification
                 };
                 _eventBus.Publish(busMessage, _rabbitMqSettings.ExchangeName, "routeKey");
-    
+
                 return Task.FromResult(Unit.Value);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error {ex}");
+                var ids = string.Join(", ", notification.Notification.Deltas.Select(d => d.Data.Id));
+                _logger.LogError($"Error from handle notificationh next id's: {ids}", ex);
 
                 return Task.FromException(ex);
             }

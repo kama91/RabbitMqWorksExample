@@ -1,4 +1,4 @@
-﻿namespace Core.RabbitMQ.Abstractions
+﻿namespace Infrastructure.RabbitMQ.Abstractions
 {
     public interface IRabbitMQSettings
     {

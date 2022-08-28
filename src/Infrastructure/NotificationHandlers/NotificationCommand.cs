@@ -2,9 +2,9 @@
 
 using MediatR;
 
-namespace Core.NotificationHandlers
+namespace Infrastructure.NotificationHandlers
 {
-    public class EventNotification : INotification
+    public class NotificationCommand : INotification
     {
         public Notification Notification { get; set; }
     }

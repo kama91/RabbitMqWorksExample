@@ -1,7 +1,6 @@
 ﻿using RabbitMQ.Client;
-using System;
 
-namespace Core.RabbitMQ.Abstractions
+namespace Infrastructure.RabbitMQ.Abstractions
 {
     public interface IRabbitMQPersistentConnection
         : IDisposable

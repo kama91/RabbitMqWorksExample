@@ -1,16 +1,20 @@
 ﻿using Core;
 using Core.Data.Notifications;
-using Core.RabbitMQ;
-using Core.RabbitMQ.Abstractions;
-using Core.RabbitMQ.QueueEvents;
 using Core.Serializer;
 using Core.Serializer.Abstractions;
+
+using Infrastructure.RabbitMQ;
+using Infrastructure.RabbitMQ.Abstractions;
+using Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using ProcessMessageConsoleService.HostedService;
 using ProcessMessageConsoleService.QueueEventHandlers;
+
 using System;
 using System.Threading.Tasks;
 
@@ -52,7 +56,7 @@ namespace ProcessMessageConsoleService
                     services.AddSingleton(rabbitSettings);
                     services.AddRabbitMq();
                     services.AddTransient<IJsonByteArraySerializer, JsonByteArraySerializer>();
-                    services.AddSingleton<IBusMessageHandler<BusMessage, Notification>, BusMessageHandler>();
+                    services.AddSingleton<IRabbitMQBusMessageHandler<RabbitMQBusMessage, Notification>, RabbitMQMessageHandler>();
                     services.AddHostedService<MessageReceiveHostedService>();
                 })
                  .ConfigureLogging((_, logConfig) =>

@@ -1,15 +1,19 @@
 using Core;
-using Core.NotificationHandlers;
-using Core.RabbitMQ;
 using Core.Serializer;
 using Core.Serializer.Abstractions;
+
+using Infrastructure.NotificationHandlers;
+using Infrastructure.RabbitMQ;
+
 using MediatR;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+
 using PublisherService.MediatorService;
 
 using System.Reflection;

@@ -1,14 +1,17 @@
-﻿using Core.RabbitMQ.Abstractions;
+﻿
+using Infrastructure.RabbitMQ.Abstractions;
+
 using Microsoft.Extensions.Logging;
+
 using Polly;
+
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
-using System;
-using System.IO;
+
 using System.Net.Sockets;
 
-namespace Core.RabbitMQ.EventBusRabbitMQ
+namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
 {
     public class RabbitMQPersistentConnection : IRabbitMQPersistentConnection
     {
@@ -50,7 +53,7 @@ namespace Core.RabbitMQ.EventBusRabbitMQ
         public bool TryConnect()
         {
             _logger.LogInformation("RabbitMQ Client is trying to connect");
-           
+
             lock (_syncRoot)
             {
                 var policy = Policy.Handle<SocketException>()

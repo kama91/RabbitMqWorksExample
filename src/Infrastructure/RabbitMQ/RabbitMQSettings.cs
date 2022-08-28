@@ -1,6 +1,7 @@
-﻿using Core.RabbitMQ.Abstractions;
+﻿
+using Infrastructure.RabbitMQ.Abstractions;
 
-namespace Core.RabbitMQ
+namespace Infrastructure.RabbitMQ
 {
     public class RabbitMQSettings : IRabbitMQSettings
     {
