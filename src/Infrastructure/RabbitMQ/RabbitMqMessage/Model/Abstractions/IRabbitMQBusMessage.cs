@@ -1,12 +1,9 @@
-﻿
-using System;
-
-namespace Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions
+﻿namespace Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions
 {
     public interface IRabbitMQBusMessage<TData>
     {
-        Guid Id { get; set; }
+        Guid Id { get; }
 
-        TData Data { get; set; }
+        TData Data { get; }
     }
 }

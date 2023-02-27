@@ -6,3 +6,5 @@
 /src/MessageProcessorConsoleService/bin
 /src/PublisherService/obj
 /src/PublisherService/bin
+/src/.vs/POCRabbitMQ
+/src/.vs/ProjectEvaluation

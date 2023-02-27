@@ -1,14 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Net.Sockets;
-using Microsoft.Extensions.DependencyInjection;
-using Core.Serializer.Abstractions;
+﻿using Core.Serializer.Abstractions;
 using Infrastructure.RabbitMQ.Abstractions;
-using RabbitMQ.Client;
+using Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Polly;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
-using Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions;
 using System.Collections.Concurrent;
+using System.Net.Sockets;
 
 namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
 {
@@ -20,7 +20,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
         private readonly ILogger<RabbitMQBus> _logger;
         private readonly ConcurrentDictionary<Guid, AsyncEventingBasicConsumer> _consumers = new();
         private const int RetryConnectCount = 5;
-        private IModel _consumerChannel;
+        private Lazy<IModel?> _consumerChannel;
 
         public RabbitMQBus(
             IServiceProvider serviceProvider,
@@ -45,7 +45,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
                 .Or<SocketException>()
                 .WaitAndRetry(RetryConnectCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                 {
-                    _logger.LogWarning(ex, "Could not publish message: {busMessageId} after {totalSeconds}s", message.Id, time.TotalSeconds);
+                    _logger.LogWarning("Could not publish message: {BusMessageId} after {TotalSeconds}s with error {Error}", message.Id, time.TotalSeconds, ex);
                 });
 
             using var channel = _persistentConnection.CreateModel();
@@ -54,7 +54,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
 
             channel.ExchangeDeclare(exchangeName, ExchangeType.Direct, true);
 
-            _logger.LogInformation("Publishing message with Id: {messageId} to RabbitMQ", message.Id);
+            _logger.LogInformation("Publishing message with Id: {MessageId} to RabbitMQ", message.Id);
 
             await policy.Execute(() =>
             {
@@ -64,9 +64,9 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
 
                 channel.BasicPublish(exchangeName, routingKey, body: messageBody);
 
-                _logger.LogInformation("Message with Id: {messageId} successfully published", message.Id);
+                _logger.LogInformation("Message with Id: {MessageId} successfully published", message.Id);
 
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             });
         }
 
@@ -79,21 +79,21 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
                 _persistentConnection.TryConnect();
             }
 
-            _consumerChannel = CreateConsumerChannel(consumerConfiguration.QueueName);
+            _consumerChannel = new Lazy<IModel?>(CreateConsumerChannel(consumerConfiguration.QueueName));
 
-            _consumerChannel.QueueBind(consumerConfiguration.QueueName, consumerConfiguration.ExchangeName, consumerConfiguration.RoutingKey);
+            _consumerChannel.Value.QueueBind(consumerConfiguration.QueueName, consumerConfiguration.ExchangeName, consumerConfiguration.RoutingKey);
 
-            var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
+            var consumer = new AsyncEventingBasicConsumer(_consumerChannel.Value);
 
-            consumer.Received += async (obj, args) => await ReceivedMessage<TE, TD>(obj, args);
+            consumer.Received += (ReceivedMessage<TE, TD>);
 
-            _consumerChannel.BasicConsume(consumerConfiguration.QueueName, false, consumer);
+            _consumerChannel.Value.BasicConsume(consumerConfiguration.QueueName, false, consumer);
 
-            _logger.LogInformation($"Bind to {consumerConfiguration.QueueName} successfully");
-            
+            _logger.LogInformation("Bind to {QueueName} successfully", consumerConfiguration.QueueName);
+
             var subscription = new RabbitMQBusSubsription(consumer, consumerConfiguration.QueueName);
             _consumers.TryAdd(subscription.Id, consumer);
-            
+
             return subscription;
         }
 
@@ -102,20 +102,25 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             try
             {
                 using var scope = _serviceProvider.CreateScope();
-                var handler = scope.ServiceProvider.GetRequiredService<IRabbitMQBusMessageHandler<TE, TD>>();
+                var handlers = scope.ServiceProvider.GetServices<IRabbitMQBusMessageHandler<TE, TD>>();
                 var message = _serializer.Deserialize<TE>(args.Body.ToArray());
-                await handler.HandleAsync(message);
-                _consumerChannel.BasicAck(args.DeliveryTag, false);
 
-                _logger.LogInformation("Message with Id:{messageId} successfully received", message.Id);
+                foreach (var handler in handlers)
+                {
+                    await handler.HandleAsync(message);
+                }
+
+                _consumerChannel.Value.BasicAck(args.DeliveryTag, false);
+
+                _logger.LogInformation("Message with Id:{MessageId} successfully received", message.Id);
             }
             catch (Exception ex)
             {
-                _consumerChannel.BasicNack(args.DeliveryTag, false, true);
+                _consumerChannel.Value.BasicNack(args.DeliveryTag, false, true);
 
                 _logger.LogError("Message does not processed", ex.Message);
             }
-        } 
+        }
 
         private IModel CreateConsumerChannel(string queueName)
         {
@@ -145,16 +150,16 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             {
                 try
                 {
-                    consumer.Received -= (obj, args) => ReceivedMessage<IRabbitMQBusMessage<TD>, TD>(obj, args);
+                    consumer.Received -= (ReceivedMessage<IRabbitMQBusMessage<TD>, TD>);
                     if (_consumers.TryRemove(subscription.Id, out var _))
                     {
-                        _logger.LogInformation("Successfully unsubscribe from queue {subscription.QueueName}", subscription.QueueName);
+                        _logger.LogInformation("Successfully unsubscribe from queue {QueueName}", subscription.QueueName);
                         return true;
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Failed unsubscribe from queue {name}. Error {error}", subscription.QueueName, ex);
+                    _logger.LogError("Failed unsubscribe from queue {QueueName}. Error {Error}", subscription.QueueName, ex);
                 }
             }
 

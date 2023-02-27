@@ -1,20 +1,48 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using Core.Data.Notifications;
+using Core.Serializer;
+using Core.Serializer.Abstractions;
+using Infrastructure.RabbitMQ;
+using Infrastructure.RabbitMQ.Abstractions;
+using Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions;
+using PublisherService;
 
-namespace CalendarService.API
+var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
+
+builder.Services.AddTransient<IJsonByteArraySerializer, JsonByteArraySerializer>();
+var rabbitSettings = builder.Configuration.GetSection("RabbitMQSettings").Get<RabbitMQSettings>();
+builder.Services.AddSingleton(rabbitSettings);
+builder.Services.AddRabbitMQ();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "PublisherService"));
 }
+
+app.UseHttpsRedirection();
+
+app.MapPost("api/notification", async (IRabbitMQBus eventBus, RabbitMQSettings rabbitSettings, ILogger<Program> logger, Notification notification) =>
+{
+    try
+    {
+        await eventBus.Publish(new RabbitMQBusMessage(Guid.NewGuid(), notification), rabbitSettings.ExchangeName, "routeKey");
+
+        return Results.Ok();
+    }
+    catch (Exception ex)
+    {
+        var ids = string.Join(", ", notification.Deltas.Select(d => d.Data.Id));
+        logger.LogError("{Error} from handle notificationh next id's: {Ids}", ex, ids);
+
+        return Results.Problem();
+    }
+});
+
+app.Run();
+

@@ -128,7 +128,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             }
             catch (IOException ex)
             {
-                _logger.LogCritical(ex.ToString());
+                _logger.LogCritical("Critical error: {Error}", ex);
             }
         }
     }

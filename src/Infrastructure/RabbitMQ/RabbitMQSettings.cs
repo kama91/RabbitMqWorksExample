@@ -1,20 +1,13 @@
-﻿
-using Infrastructure.RabbitMQ.Abstractions;
-
-namespace Infrastructure.RabbitMQ
+﻿namespace Infrastructure.RabbitMQ
 {
-    public class RabbitMQSettings : IRabbitMQSettings
+    public record class RabbitMQSettings
     {
-        public string HostName { get; set; }
+        public required string HostName { get; init; }
 
-        public string QueueName { get; set; }
+        public required string QueueName { get; init; }
 
-        public string ExchangeName { get; set; }
+        public required string ExchangeName { get; init; }
 
-        public string RetryConnectCount { get; set; }
-
-        public RabbitMQSettings()
-        {
-        }
+        public string RetryConnectCount { get; init; }
     }
 }
