@@ -2,10 +2,16 @@
 
 namespace Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions
 {
-    public class RabbitMQBusMessage : IRabbitMQBusMessage<Notification>
+    public record class RabbitMQBusMessage : IRabbitMQBusMessage<Notification>
     {
-        public Guid Id { get; set; }
+        public RabbitMQBusMessage(Guid id, Notification data)
+        {
+            Id = id;
+            Data = data;
+        }
 
-        public Notification Data { get; set; } = null!;
+        public Guid Id { get; }
+
+        public Notification Data { get; }
     }
 }

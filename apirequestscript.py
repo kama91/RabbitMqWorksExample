@@ -7,7 +7,7 @@ with open('testData.json') as file:
     file.close()
     
 body = json.dumps(body)    
-api_endpoint = 'http://localhost:5000/api/notification/events'
+api_endpoint = 'http://localhost:5000/api/notification'
 headers = {'content-type': 'application/json'}
 start = time.perf_counter()
 response = requests.post(api_endpoint, headers=headers, data=body, verify=False)
