@@ -38,9 +38,10 @@ app.MapPost("api/notification", async (IRabbitMQBus eventBus, RabbitMQSettings r
     catch (Exception ex)
     {
         var ids = string.Join(", ", notification.Deltas.Select(d => d.Data.Id));
+
         logger.LogError("{Error} from handle notificationh next id's: {Ids}", ex, ids);
 
-        return Results.Problem();
+        return Results.BadRequest(ex);
     }
 });
 
