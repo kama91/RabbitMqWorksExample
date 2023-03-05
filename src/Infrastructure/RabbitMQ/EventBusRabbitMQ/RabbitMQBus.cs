@@ -125,7 +125,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
         private IModel CreateConsumerChannel(string queueName)
         {
             var channel = _persistentConnection.CreateModel();
-            channel.ExchangeDeclare("EventExchange", ExchangeType.Direct, true);
+            channel.ExchangeDeclare("TestEventExchange", ExchangeType.Direct, true);
             channel.QueueDeclare(queueName, true, false, false);
 
             channel.CallbackException += (sender, ea) =>

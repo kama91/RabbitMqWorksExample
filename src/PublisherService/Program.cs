@@ -4,13 +4,12 @@ using Core.Serializer.Abstractions;
 using Infrastructure.RabbitMQ;
 using Infrastructure.RabbitMQ.Abstractions;
 using Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions;
-using PublisherService;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
 builder.Services.AddTransient<IJsonByteArraySerializer, JsonByteArraySerializer>();
-var rabbitSettings = builder.Configuration.GetSection("RabbitMQSettings").Get<RabbitMQSettings>();
+var rabbitSettings = builder.Configuration.GetSection("rabbitmq").Get<RabbitMQSettings>();
 builder.Services.AddSingleton(rabbitSettings);
 builder.Services.AddRabbitMQ();
 

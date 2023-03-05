@@ -1,25 +1,25 @@
 {
-    "deltas": [
-        {
-            "type": "message.created",
-            "object_data": {
-              "id": "aaaaaaaaaaaaa2134",
-              "account_id": "dfsdghf4u45uhjrt"
-            }
-        },
-        {
-            "type": "message.updated",
-            "object_data": {
-              "id": "1111111111sadasaf",
-              "account_id": "fdgfsd34t23t23gg"
-            }
-        },
-        {
-            "type": "message.deleted",
-            "object_data": {
-              "id": "nmbnmbnbn4363vbvc",
-              "account_id": "qaqeqeqwaadas21312"
-            }
-        }    
-    ]
+  "deltas": [
+    {
+      "type": "message.created",
+      "object_data": {
+        "id": "aaaaaaaaaaaaa2134",
+        "account_id": "dfsdghf4u45uhjrt"
+      }
+    },
+    {
+      "type": "message.updated",
+      "object_data": {
+        "id": "1111111111sadasaf",
+        "account_id": "fdgfsd34t23t23gg"
+      }
+    },
+    {
+      "type": "message.deleted",
+      "object_data": {
+        "id": "nmbnmbnbn4363vbvc",
+        "account_id": "qaqeqeqwaadas21312"
+      }
+    }
+  ]
 }

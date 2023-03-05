@@ -1,5 +1,4 @@
-﻿using Core;
-using Core.Data.Notifications;
+﻿using Core.Data.Notifications;
 using Core.Serializer;
 using Core.Serializer.Abstractions;
 
@@ -20,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace ProcessMessageConsoleService
 {
-    public  class Program
+    public class Program
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -48,20 +47,21 @@ namespace ProcessMessageConsoleService
             var host = new HostBuilder()
                 .ConfigureAppConfiguration(cfgBuilder =>
                 {
-                    cfgBuilder.AddJsonFile("appsettings.json", true, true);
+                    cfgBuilder.AddJsonFile("appsettings.json", true, true)
+                    .AddEnvironmentVariables();
                 })
                 .ConfigureServices((ctx, services) =>
                 {
-                    var rabbitSettings = ctx.Configuration.GetSection("RabbitMQSettings").Get<RabbitMQSettings>();
+                    var rabbitSettings = ctx.Configuration.GetSection("rabbitmq").Get<RabbitMQSettings>();
                     services.AddSingleton(rabbitSettings);
-                    services.AddRabbitMq();
+                    services.AddRabbitMQ();
                     services.AddTransient<IJsonByteArraySerializer, JsonByteArraySerializer>();
                     services.AddSingleton<IRabbitMQBusMessageHandler<RabbitMQBusMessage, Notification>, RabbitMQMessageHandler>();
                     services.AddHostedService<MessageReceiveHostedService>();
                 })
                  .ConfigureLogging((_, logConfig) =>
                  {
-                     logConfig.SetMinimumLevel(LogLevel.Trace);
+                     logConfig.SetMinimumLevel(LogLevel.Debug);
                      logConfig.AddConsole();
                  })
                 .UseConsoleLifetime()
