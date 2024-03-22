@@ -1,31 +1,26 @@
-﻿
-using Infrastructure.RabbitMQ.Abstractions;
-
-using Microsoft.Extensions.Logging;
-
+﻿using Microsoft.Extensions.Logging;
 using Polly;
-
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
-
 using System.Net.Sockets;
+using Infrastructure.RabbitMq.Abstractions;
 
-namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
+namespace Infrastructure.RabbitMq.EventBusRabbitMQ
 {
-    public class RabbitMQPersistentConnection : IRabbitMQPersistentConnection
+    public sealed class RabbitMqPersistentConnection : IRabbitMqPersistentConnection
     {
         private readonly IConnectionFactory _connectionFactory;
-        private readonly ILogger<RabbitMQPersistentConnection> _logger;
+        private readonly ILogger<RabbitMqPersistentConnection> _logger;
         private readonly int _retryConnectCount;
-        IConnection _connection;
+        private IConnection _connection;
         private bool _disposed;
 
         private readonly object _syncRoot = new();
 
-        public RabbitMQPersistentConnection(
+        public RabbitMqPersistentConnection(
             IConnectionFactory connectionFactory,
-            ILogger<RabbitMQPersistentConnection> logger,
+            ILogger<RabbitMqPersistentConnection> logger,
             int retryConnectCount = 5)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
@@ -33,13 +28,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             _retryConnectCount = retryConnectCount;
         }
 
-        public bool IsConnected
-        {
-            get
-            {
-                return _connection != null && _connection.IsOpen && !_disposed;
-            }
-        }
+        public bool IsConnected => _connection is not null && _connection.IsOpen && !_disposed;
 
         public IModel CreateModel()
         {
@@ -48,7 +37,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
                 throw new InvalidOperationException("No RabbitMQ connections are available to perform this action");
             }
 
-            return _connection.CreateModel();
+            return _connection is not null ? _connection.CreateModel() : throw new InvalidOperationException("No RabbitMQ connections are available to perform this action");
         }
         public bool TryConnect()
         {
@@ -88,7 +77,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             }
         }
 
-        private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
+        private void OnConnectionBlocked(object? sender, ConnectionBlockedEventArgs e)
         {
             if (_disposed) return;
 
@@ -97,7 +86,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             TryConnect();
         }
 
-        void OnCallbackException(object sender, CallbackExceptionEventArgs e)
+        private void OnCallbackException(object? sender, CallbackExceptionEventArgs e)
         {
             if (_disposed) return;
 
@@ -106,7 +95,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             TryConnect();
         }
 
-        void OnConnectionShutdown(object sender, ShutdownEventArgs reason)
+        private void OnConnectionShutdown(object? sender, ShutdownEventArgs reason)
         {
             if (_disposed) return;
 

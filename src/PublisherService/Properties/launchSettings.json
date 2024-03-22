@@ -7,7 +7,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "CalendarService.MessageAPI": {
+    "PublisherService": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {

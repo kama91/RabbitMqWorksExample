@@ -1,10 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Core.Data.Notifications
+namespace Core.Data.Notifications;
+
+public sealed record Notification
 {
-    public class Notification
-    {
-        [JsonPropertyName("deltas")]
-        public NotificationDelta[] Deltas { get; set; }
-    }
+    [JsonPropertyName("deltas")] public NotificationDelta[] Deltas { get; init; }
 }

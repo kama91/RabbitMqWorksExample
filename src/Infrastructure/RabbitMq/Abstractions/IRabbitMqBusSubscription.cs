@@ -1,8 +1,8 @@
 ﻿using RabbitMQ.Client.Events;
 
-namespace Infrastructure.RabbitMQ.Abstractions
+namespace Infrastructure.RabbitMq.Abstractions
 {
-    public interface IRabbitMQBusSubscription
+    public interface IRabbitMqBusSubscription
     {
         Guid Id { get; }
 

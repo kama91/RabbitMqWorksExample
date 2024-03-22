@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "MessageProcessorConsoleService": {
+    "MessageProcessor": {
       "commandName": "Project"
     },
     "Docker": {

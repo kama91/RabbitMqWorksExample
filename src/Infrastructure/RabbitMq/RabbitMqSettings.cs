@@ -1,6 +1,6 @@
-﻿namespace Infrastructure.RabbitMQ
+﻿namespace Infrastructure.RabbitMq
 {
-    public record class RabbitMQSettings
+    public sealed record RabbitMqSettings
     {
         public required string ConnectionString { get; init; }
 

@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.9'
 
 services:
   rabbit:
@@ -12,30 +12,37 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
+    networks:
+      - rabbit_network  
 
-  publisherservice:
+  publisher-service:
     restart: on-failure
-    image: ${DOCKER_REGISTRY-}publisherservice
     env_file:
       - variables.env
     build:
       context: .
       dockerfile: src/PublisherService/Dockerfile
     ports:
-      - "5000:80"
-      - "44388:443"
+      - "5000:8080"
     depends_on:
       rabbit:
         condition: service_healthy
+    networks:
+      - rabbit_network    
+    
+  message-processor:
+     restart: on-failure
+     env_file:
+       - variables.env
+     build:
+       context: .
+       dockerfile: src/MessageProcessor/Dockerfile
+     depends_on:
+       rabbit:
+         condition: service_healthy
+     networks:
+       - rabbit_network
 
-  messageprocessorconsoleservice:
-    restart: on-failure
-    image: ${DOCKER_REGISTRY-}messageprocessorconsoleservice
-    env_file:
-      - variables.env
-    build:
-      context: .
-      dockerfile: src/MessageProcessorConsoleService/Dockerfile
-    depends_on:
-      rabbit:
-        condition: service_healthy
+networks:
+  rabbit_network:
+   

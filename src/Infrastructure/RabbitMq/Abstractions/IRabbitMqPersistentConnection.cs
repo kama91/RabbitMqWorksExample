@@ -1,8 +1,8 @@
 ﻿using RabbitMQ.Client;
 
-namespace Infrastructure.RabbitMQ.Abstractions
+namespace Infrastructure.RabbitMq.Abstractions
 {
-    public interface IRabbitMQPersistentConnection
+    public interface IRabbitMqPersistentConnection
         : IDisposable
     {
         bool IsConnected { get; }

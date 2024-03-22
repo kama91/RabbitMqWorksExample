@@ -1,6 +1,4 @@
 ﻿using Core.Serializer.Abstractions;
-using Infrastructure.RabbitMQ.Abstractions;
-using Infrastructure.RabbitMQ.RabbitMqMessage.Model.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -9,24 +7,26 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
+using Infrastructure.RabbitMq.Abstractions;
+using Infrastructure.RabbitMq.RabbitMqMessage.Model.Abstractions;
 
-namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
+namespace Infrastructure.RabbitMq.EventBusRabbitMQ
 {
-    public class RabbitMQBus : IRabbitMQBus
+    public sealed class RabbitMqBus : IRabbitMqBus
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IRabbitMQPersistentConnection _persistentConnection;
+        private readonly IRabbitMqPersistentConnection _persistentConnection;
         private readonly IJsonByteArraySerializer _serializer;
-        private readonly ILogger<RabbitMQBus> _logger;
+        private readonly ILogger<RabbitMqBus> _logger;
         private readonly ConcurrentDictionary<Guid, AsyncEventingBasicConsumer> _consumers = new();
         private const int RetryConnectCount = 5;
         private Lazy<IModel?> _consumerChannel;
 
-        public RabbitMQBus(
+        public RabbitMqBus(
             IServiceProvider serviceProvider,
-            IRabbitMQPersistentConnection persistentConnection,
+            IRabbitMqPersistentConnection persistentConnection,
             IJsonByteArraySerializer serializer,
-            ILogger<RabbitMQBus> logger)
+            ILogger<RabbitMqBus> logger)
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _persistentConnection = persistentConnection ?? throw new ArgumentNullException(nameof(persistentConnection));
@@ -34,7 +34,7 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task Publish<TM>(IRabbitMQBusMessage<TM> message, string exchangeName, string routingKey)
+        public async Task Publish<TM>(IRabbitMqBusMessage<TM> message, string exchangeName, string routingKey)
         {
             if (!_persistentConnection.IsConnected)
             {
@@ -70,9 +70,9 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             });
         }
 
-        public IRabbitMQBusSubscription Subscribe<TH, TE, TD>(MessageConsumerConfiguration consumerConfiguration)
-            where TH : IRabbitMQBusMessageHandler<TE, TD>
-            where TE : IRabbitMQBusMessage<TD>
+        public IRabbitMqBusSubscription Subscribe<TH, TE, TD>(MessageConsumerConfiguration consumerConfiguration)
+            where TH : IRabbitMqBusMessageHandler<TE, TD>
+            where TE : IRabbitMqBusMessage<TD>
         {
             if (!_persistentConnection.IsConnected)
             {
@@ -91,18 +91,18 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
 
             _logger.LogInformation("Bind to {QueueName} successfully", consumerConfiguration.QueueName);
 
-            var subscription = new RabbitMQBusSubsription(consumer, consumerConfiguration.QueueName);
+            var subscription = new RabbitMqBusSubscription(consumer, consumerConfiguration.QueueName);
             _consumers.TryAdd(subscription.Id, consumer);
 
             return subscription;
         }
 
-        private async Task ReceivedMessage<TE, TD>(object sender, BasicDeliverEventArgs args) where TE : IRabbitMQBusMessage<TD>
+        private async Task ReceivedMessage<TE, TD>(object sender, BasicDeliverEventArgs args) where TE : IRabbitMqBusMessage<TD>
         {
             try
             {
                 using var scope = _serviceProvider.CreateScope();
-                var handlers = scope.ServiceProvider.GetServices<IRabbitMQBusMessageHandler<TE, TD>>();
+                var handlers = scope.ServiceProvider.GetServices<IRabbitMqBusMessageHandler<TE, TD>>();
                 var message = _serializer.Deserialize<TE>(args.Body.ToArray());
 
                 foreach (var handler in handlers)
@@ -110,15 +110,15 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
                     await handler.HandleAsync(message);
                 }
 
-                _consumerChannel.Value.BasicAck(args.DeliveryTag, false);
+                _consumerChannel.Value!.BasicAck(args.DeliveryTag, false);
 
                 _logger.LogInformation("Message with Id:{MessageId} successfully received", message.Id);
             }
             catch (Exception ex)
             {
-                _consumerChannel.Value.BasicNack(args.DeliveryTag, false, true);
+                _consumerChannel.Value!.BasicNack(args.DeliveryTag, false, true);
 
-                _logger.LogError("Message does not processed", ex.Message);
+                _logger.LogError("Message is not processed with error {error}", ex);
             }
         }
 
@@ -139,28 +139,26 @@ namespace Infrastructure.RabbitMQ.EventBusRabbitMQ
             return channel;
         }
 
-        public bool Unsubscribe<TD>(IRabbitMQBusSubscription subscription)
+        public bool Unsubscribe<TD>(IRabbitMqBusSubscription subscription)
         {
             return UnsubscribeFromQueue<TD>(subscription);
         }
 
-        private bool UnsubscribeFromQueue<TD>(IRabbitMQBusSubscription subscription)
+        private bool UnsubscribeFromQueue<TD>(IRabbitMqBusSubscription subscription)
         {
-            if (_consumers.TryGetValue(subscription.Id, out var consumer))
+            if (!_consumers.TryGetValue(subscription.Id, out var consumer)) return false;
+            try
             {
-                try
+                consumer.Received -= (ReceivedMessage<IRabbitMqBusMessage<TD>, TD>);
+                if (_consumers.TryRemove(subscription.Id, out var _))
                 {
-                    consumer.Received -= (ReceivedMessage<IRabbitMQBusMessage<TD>, TD>);
-                    if (_consumers.TryRemove(subscription.Id, out var _))
-                    {
-                        _logger.LogInformation("Successfully unsubscribe from queue {QueueName}", subscription.QueueName);
-                        return true;
-                    }
+                    _logger.LogInformation("Successfully unsubscribe from queue {QueueName}", subscription.QueueName);
+                    return true;
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError("Failed unsubscribe from queue {QueueName}. Error {Error}", subscription.QueueName, ex);
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Failed unsubscribe from queue {QueueName}. Error {Error}", subscription.QueueName, ex);
             }
 
             return false;
