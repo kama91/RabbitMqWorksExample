@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY src/MessageProcessor/MessageProcessor.csproj ./MessageProcessor/
 COPY src/Core/Core.csproj ./Core/
@@ -10,7 +10,7 @@ RUN dotnet build src/MessageProcessor/MessageProcessor.csproj -c Release -o /app
 FROM build AS publish
 RUN dotnet publish src/MessageProcessor/MessageProcessor.csproj -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/runtime:7.0  
+FROM mcr.microsoft.com/dotnet/runtime:8.0  
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
     APP_DIR="/app/publish" \
     APP_USER=app_user
