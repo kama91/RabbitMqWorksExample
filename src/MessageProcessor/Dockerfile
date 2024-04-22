@@ -10,12 +10,11 @@ RUN dotnet build src/MessageProcessor/MessageProcessor.csproj -c Release -o /app
 FROM build AS publish
 RUN dotnet publish src/MessageProcessor/MessageProcessor.csproj -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0  
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
-    APP_DIR="/app/publish" \
-    APP_USER=app_user
+FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine AS base 
+ARG APP_DIR="app/publish"
+ARG APP_USER=app_user
 WORKDIR /app
-RUN useradd -r -u 1000 ${APP_USER} && chown -R ${APP_USER} . && chmod 700 .
+RUN adduser -D ${APP_USER} && chown -R ${APP_USER} . && chmod 700 .
 USER ${APP_USER}
 COPY --from=publish ${APP_DIR} .
 ENTRYPOINT ["dotnet", "MessageProcessor.dll"]
